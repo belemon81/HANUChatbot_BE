@@ -1,0 +1,4 @@
+Farley has 5 apples
+Esther has 10 apples
+
+Samuel has no apples
