@@ -1,5 +1,7 @@
-from data_processing import process_data
+import numpy as np
+import pandas as pd
 import psycopg2
+
 from pgvector.psycopg2 import register_vector
 
 
@@ -25,29 +27,42 @@ def create_table(conn):
     with conn.cursor() as cur:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS embeddings (
-                id bigserial primary key,   
+                id bigserial primary key,  
+                content text, 
                 embedding vector(256)
             );
         """)
     conn.commit()
 
 
-def load_data(conn):
+def load_data(conn, path):
+    # process_data('../documents/embedded_test.csv', '../documents/embedded_test.csv')
+    data = pd.read_csv(path)
+    data_list = [(row['Combined'], np.array(eval(row['Embedding']))) for index, row in data.iterrows()]
     with conn.cursor() as cur:
-        doc_embeddings = process_data()
-        for i, doc in enumerate(doc_embeddings):
-            vector_list = list(doc_embeddings[i])  # Convert to list if an array type
-            cur.execute("INSERT INTO embeddings (embedding) VALUES (%s)", (vector_list,))
+        cur.executemany("""
+            INSERT INTO embeddings (content, embedding)
+            VALUES (%s, %s)
+            """, data_list)
     conn.commit()
 
 
-def store_data():
+def create_index(conn):
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE INDEX ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+        """)
+    conn.commit()
+
+
+def store_data(from_path):
     conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="localhost", port=23050)
     create_database(conn)
     conn = psycopg2.connect(database="hanu_chatbot", user="postgres", password="postgres", host="localhost", port=23050)
     create_extension(conn)
     create_table(conn)
-    load_data(conn)
+    create_index(conn)
+    load_data(conn, from_path)
 
 
-store_data()
+store_data('../documents/embedded_test.csv')

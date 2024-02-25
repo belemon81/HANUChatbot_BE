@@ -1,7 +1,8 @@
-from data_collecting import collect_data
+import pandas as pd
 # import tiktoken
+
 from src.test import client
-import numpy as np
+from data_collecting import collect_data
 
 
 # def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
@@ -10,15 +11,7 @@ import numpy as np
 #     return num_tokens
 
 
-# Helper function: calculate length of essay
-# def get_essay_length(essay):
-#     word_list = essay.split()
-#     num_words = len(word_list)
-#     return num_words
-
-
-# Helper function: calculate cost of embedding num_tokens
-# https://openai.com/pricing
+# Helper function: calculate cost of embedding num_tokens: https://openai.com/pricing
 # def get_embedding_cost(num_tokens):
 #     return num_tokens / 1000 * 0.0005
 
@@ -32,29 +25,38 @@ import numpy as np
 #     return total_cost
 
 
-def normalize_l2(x):
-    x = np.array(x)
-    if x.ndim == 1:
-        norm = np.linalg.norm(x)
-        if norm == 0:
-            return x
-        return x / norm
-    else:
-        norm = np.linalg.norm(x, 2, axis=1, keepdims=True)
-        return np.where(norm == 0, x, x / norm)
+# def normalize_l2(x):
+#     x = np.array(x)
+#     if x.ndim == 1:
+#         norm = np.linalg.norm(x)
+#         if norm == 0:
+#             return x
+#         return x / norm
+#     else:
+#         norm = np.linalg.norm(x, 2, axis=1, keepdims=True)
+#         return np.where(norm == 0, x, x / norm)
 
 
-def get_embedding(text, model="text-embedding-3-small"):
+def get_embedding(text, model='text-embedding-3-small'):
     text = text.replace("\n", " ")
-    return client.embeddings.create(input=[text], model=model).data[0].embedding[:256]
+    return client.embeddings.create(input=[text], model=model, encoding_format="float").data[0].embedding[:256]
 
 
-def process_data():
-    documents = collect_data()
-    doc_embeddings = []
-    for doc in documents:
-        doc_embeddings.append(normalize_l2(get_embedding(doc)))
-    return doc_embeddings
+def combine_values(row):
+    combined_parts = []
+    for col in row.index:
+        value = row[col]
+        if not pd.isna(value):
+            combined_parts.append(f"{col}: {value}")
+    return "; ".join(combined_parts)
 
 
-# print(process_data())
+def process_data(from_path, to_path):
+    data = collect_data(from_path)
+    data['Combined'] = data.apply(combine_values, axis=1)
+    data['Embedding'] = data.Content.apply(lambda text: get_embedding(text))
+    data.to_csv(to_path, index=False)
+
+# process_data('../documents/embedded_test.csv', '../documents/embedded_test.csv')
+# data = pd.read_csv('../documents/embedded_test.csv')
+# print(data)
