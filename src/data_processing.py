@@ -1,8 +1,9 @@
 import pandas as pd
-# import tiktoken
 
 from src.test import client
-from data_collecting import collect_data
+
+
+# import tiktoken
 
 
 # def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
@@ -11,12 +12,12 @@ from data_collecting import collect_data
 #     return num_tokens
 
 
-# Helper function: calculate cost of embedding num_tokens: https://openai.com/pricing
+# Calculate cost of embedding num_tokens: https://openai.com/pricing
 # def get_embedding_cost(num_tokens):
 #     return num_tokens / 1000 * 0.0005
 
 
-# Helper function: calculate total cost of embedding all content in the dataframe
+# Calculate total cost of embedding all content in the dataframe
 # def get_total_embeddings_cost(documents):
 #     total_tokens = 0
 #     for doc in documents:
@@ -51,12 +52,12 @@ def combine_values(row):
     return "; ".join(combined_parts)
 
 
-def process_data(from_path, to_path):
-    data = collect_data(from_path)
+def process_data(data, to_path):
     data['Combined'] = data.apply(combine_values, axis=1)
     data['Embedding'] = data.Content.apply(lambda text: get_embedding(text))
     data.to_csv(to_path, index=False)
 
-# process_data('../documents/embedded_test.csv', '../documents/embedded_test.csv')
+# data = collect_data('../documents/test.csv')
+# process_data(data, '../documents/embedded_test.csv')
 # data = pd.read_csv('../documents/embedded_test.csv')
 # print(data)

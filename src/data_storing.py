@@ -64,5 +64,4 @@ def store_data(from_path):
     create_index(conn)
     load_data(conn, from_path)
 
-
-store_data('../documents/embedded_test.csv')
+# store_data('../documents/embedded_test.csv')

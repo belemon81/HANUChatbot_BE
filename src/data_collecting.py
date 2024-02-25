@@ -17,4 +17,4 @@ def collect_data(from_path):
     data = data[["Title", "Summary", "Content", "URL", "Contributor"]]
     return data
 
-# print(collect_data('../test/test.csv'))
+# print(collect_data('../documents/test.csv'))
