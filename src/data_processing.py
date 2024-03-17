@@ -1,15 +1,7 @@
 import pandas as pd
+import tiktoken
 
 from src.test import client
-
-
-# import tiktoken
-
-
-# def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
-#     encoding = tiktoken.get_encoding(encoding_name)
-#     num_tokens = len(encoding.encode(string))
-#     return num_tokens
 
 
 # Calculate cost of embedding num_tokens: https://openai.com/pricing
@@ -26,16 +18,55 @@ from src.test import client
 #     return total_cost
 
 
-# def normalize_l2(x):
-#     x = np.array(x)
-#     if x.ndim == 1:
-#         norm = np.linalg.norm(x)
-#         if norm == 0:
-#             return x
-#         return x / norm
-#     else:
-#         norm = np.linalg.norm(x, 2, axis=1, keepdims=True)
-#         return np.where(norm == 0, x, x / norm)
+def get_num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
+    encoding = tiktoken.get_encoding(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
+
+
+def get_chunked_data(data, max_tokens=1000):
+    chunks = []
+    ideal_size = int(max_tokens // (4 / 3))  # 1 token ~ 3/4 of a word
+
+    for i in range(len(data.index)):
+        content = data['Content'][i]
+        token_len = get_num_tokens_from_string(content)
+        if token_len <= max_tokens:
+            chunks.append([data['Title'][i],
+                           data['Summary'][i],
+                           content,
+                           data['URL'][i],
+                           data['Contributor'][i]])
+        else:
+            # calculate total chunks can be split
+            words = content.split()
+            words = [w for w in words if w != ' ']
+            total_words = len(words)
+            chunks_len = total_words // ideal_size
+            if total_words % ideal_size != 0:
+                chunks_len += 1
+
+            # split to chunks where chunk(start;end)
+            start = 0
+            end = ideal_size
+            for j in range(chunks_len):
+                if end > total_words:
+                    end = total_words
+
+                new_content = words[start:end]
+                new_content_string = ' '.join(new_content)  # include ' ' again
+                new_content_token_len = get_num_tokens_from_string(new_content_string)
+
+                if new_content_token_len > 0:
+                    chunks.append([data['Title'][i],
+                                   data['Summary'][i],
+                                   new_content_string,
+                                   data['URL'][i],
+                                   data['Contributor'][i]])
+
+                start += ideal_size
+                end += ideal_size
+    return pd.DataFrame(chunks, columns=['Title', 'Summary', 'Content', 'URL', 'Contributor'])
 
 
 def get_embedding(text, model='text-embedding-3-small'):
