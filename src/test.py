@@ -20,9 +20,9 @@ def answer_question():
     if question:
         try:
             completion = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model='gpt-3.5-turbo',
                 messages=[
-                    {"role": "user", "content": question}
+                    {'role': 'user', 'content': question}
                 ]
             )
             answer = completion.choices[0].message.content
@@ -30,7 +30,7 @@ def answer_question():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     else:
-        return jsonify({'error': 'Question not provided'}), 400
+        return jsonify({'error': 'Question not provided.'}), 400
 
 
 if __name__ == '__main__':

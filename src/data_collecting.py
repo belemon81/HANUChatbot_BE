@@ -12,9 +12,10 @@ import pandas as pd
 #     return documents
 
 
-def collect_data(from_path):
-    data = pd.read_csv(from_path)
-    data = data[["Title", "Summary", "Content", "URL", "Contributor"]]
+# TODO: collect data from csv file
+def collect_data(from_file):
+    data = pd.read_csv(from_file)
+    data = data[['Title', 'Summary', 'Content', 'URL', 'Contributor']]
     return data
 
 # print(collect_data('../documents/test.csv'))

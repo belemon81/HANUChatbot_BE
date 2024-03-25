@@ -17,13 +17,14 @@ from src.test import client
 #     total_cost = get_embedding_cost(total_tokens)
 #     return total_cost
 
-
+# TODO: get number of tokens from a text
 def get_num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
     encoding = tiktoken.get_encoding(encoding_name)
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
 
+# TODO: chunk data to specific length of tokens
 def get_chunked_data(data, max_tokens=1000):
     chunks = []
     ideal_size = int(max_tokens // (4 / 3))  # 1 token ~ 3/4 of a word
@@ -69,24 +70,27 @@ def get_chunked_data(data, max_tokens=1000):
     return pd.DataFrame(chunks, columns=['Title', 'Summary', 'Content', 'URL', 'Contributor'])
 
 
+#  TODO: get embedding
 def get_embedding(text, model='text-embedding-3-small'):
-    text = text.replace("\n", " ")
-    return client.embeddings.create(input=[text], model=model, encoding_format="float").data[0].embedding[:256]
+    text = text.replace('\n', ' ')
+    return client.embeddings.create(input=[text], model=model, encoding_format='float').data[0].embedding[:256]
 
 
+# TODO: combine values from multiple columns in data to one content
 def combine_values(row):
     combined_parts = []
     for col in row.index:
         value = row[col]
         if not pd.isna(value):
-            combined_parts.append(f"{col}: {value}")
-    return "; ".join(combined_parts)
+            combined_parts.append(f'{col}: {value}')
+    return '; '.join(combined_parts)
 
 
-def process_data(data, to_path):
+# TODO: process data
+def process_data(data, to_file):
     data['Combined'] = data.apply(combine_values, axis=1)
     data['Embedding'] = data.Content.apply(lambda text: get_embedding(text))
-    data.to_csv(to_path, index=False)
+    data.to_csv(to_file, index=False)
 
 # data = collect_data('../documents/test.csv')
 # process_data(data, '../documents/embedded_test.csv')
