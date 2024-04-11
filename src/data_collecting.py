@@ -16,7 +16,7 @@ import pandas as pd
 def collect_data(from_file):
     data = pd.read_csv(from_file)
     data = data[['Title', 'Summary', 'Content', 'URL', 'Contributor']]
-    print("Collected data from " + from_file)
+    print(f"\nCollected data from {from_file}!")
     return data
 
 # print(collect_data('../documents/test.csv'))

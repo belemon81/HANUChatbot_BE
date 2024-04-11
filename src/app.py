@@ -3,11 +3,10 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from src.data_processing import get_embedding
-from src.model_utitity import vector_search, get_answer
+from src.model_utitity import get_answer, vector_search
 
 app = Flask(__name__)
 cors = CORS(app, origins=['http://localhost:3000'])
-conn = psycopg2.connect(database='hanu_chatbot', user='postgres', password='postgres', host='localhost', port=23050)
 
 
 @app.route('/', methods=['GET'])
@@ -16,18 +15,16 @@ def check_app_health():
 
 
 @app.route('/hanu-chatbot/educational-program', methods=['POST'])
-def answer_educational_program_question():
+def get_educational_program_details():
     data = request.get_json()
     question = data.get('question')
-    context = data.get('context')
+    conn = psycopg2.connect(database='hanu_chatbot', user='postgres', password='postgres', host='localhost', port=5432)
 
     if question:
         try:
-            answer = get_answer(question, context, conn, 'test')
-            return jsonify({'answer': answer})
-            # query_embedding = get_embedding(question)
-            # relevant_docs = vector_search(query_embedding, conn, 'test')
-            # return jsonify({'relevant_docs': relevant_docs})
+            query_embedding = get_embedding(question)
+            relevant_docs = vector_search(query_embedding, conn, 'educational_program')
+            return jsonify({'relevant_docs': relevant_docs})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     else:
@@ -35,17 +32,18 @@ def answer_educational_program_question():
 
 
 @app.route('/hanu-chatbot/public-administration', methods=['POST'])
-def answer_events_clubs_question():
+def get_public_administration_details():
     data = request.get_json()
     question = data.get('question')
+    conn = psycopg2.connect(database='hanu_chatbot', user='postgres', password='postgres', host='localhost', port=5432)
     # context = data.get('context')
 
     if question:
         try:
-            # answer = get_answer(question, context, conn, 'public-administration')
+            # answer = get_answer(question, context, conn, 'public_administration')
             # return jsonify({'answer': answer})
             query_embedding = get_embedding(question)
-            relevant_docs = vector_search(query_embedding, conn, 'public-administration')
+            relevant_docs = vector_search(query_embedding, conn, 'public_administration')
             return jsonify({'relevant_docs': relevant_docs})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -54,4 +52,4 @@ def answer_events_clubs_question():
 
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=2305)
+    app.run(host='localhost', port=8080)

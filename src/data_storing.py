@@ -14,7 +14,14 @@ def create_database(conn, database_name):
             cur.execute(f"CREATE DATABASE {database_name}")
             cur.execute(f"GRANT ALL PRIVILEGES ON DATABASE {database_name} TO postgres")
     conn.autocommit = False
-    print("Database created successfully!")
+    print(f"Database '{database_name}' created successfully!")
+
+
+# TODO: initialize database
+def init_database(database_name):
+    postgres_conn = psycopg2.connect(database='postgres', user='postgres', password='postgres',
+                                     host='localhost', port=5432)
+    create_database(postgres_conn, database_name)
 
 
 # TODO: create extension
@@ -23,7 +30,7 @@ def create_extension(conn):
         cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
     register_vector(conn)
     conn.commit()
-    print("Extension created successfully!")
+    print("Extension 'vector' created successfully!")
 
 
 # TODO: create table
@@ -37,7 +44,7 @@ def create_table(conn, table_name):
             );
         """)
     conn.commit()
-    print(f"Table {table_name} created successfully!")
+    print(f"Table '{table_name}' created successfully!")
 
 
 # TODO: create index
@@ -47,7 +54,16 @@ def create_index(conn, table_name):
             CREATE INDEX ON {table_name} USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
         """)
     conn.commit()
-    print(f"Table {table_name}'s index created successfully!")
+    print(f"Index for '{table_name}' created successfully!")
+
+
+# TODO: initialize table
+def init_table(database_name, table_name):
+    db_conn = psycopg2.connect(database=database_name, user='postgres', password='postgres',
+                               host='localhost', port=5432)
+    create_extension(db_conn)
+    create_table(db_conn, table_name)
+    create_index(db_conn, table_name)
 
 
 # TODO: load data from file to tables
@@ -60,22 +76,11 @@ def load_data(conn, from_file, table_name):
             VALUES (%s, %s)
             """, data_list)
     conn.commit()
-    print(f"----Embeddings from {from_file} are stored to database!")
-
-
-# TODO: initialize database and table
-def init_database(database_name, table_name):
-    postgres_conn = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='localhost',
-                                     port=23050)
-    create_database(postgres_conn, database_name)
-    db_conn = psycopg2.connect(database=database_name, user='postgres', password='postgres', host='localhost',
-                               port=23050)
-    create_table(db_conn, table_name)
-    create_index(db_conn, table_name)
+    print(f"-----Stored embeddings from {from_file} to table '{table_name}'!")
 
 
 # TODO: store data to table in database
 def store_data(from_file, database_name, table_name):
-    db_conn = psycopg2.connect(database=database_name, user='postgres', password='postgres', host='localhost',
-                               port=23050)
+    db_conn = psycopg2.connect(database=database_name, user='postgres', password='postgres',
+                               host='localhost', port=5432)
     load_data(db_conn, from_file, table_name)

@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 
-from src.opanai_client import client
+from src.openai_client import client
 
 app = Flask(__name__)
 

@@ -1,7 +1,7 @@
 import pandas as pd
 import tiktoken
 
-from src.opanai_client import client
+from src.openai_client import client
 
 
 # Calculate cost of embedding num_tokens: https://openai.com/pricing
@@ -25,7 +25,7 @@ def get_num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") 
 
 
 # TODO: chunk data to specific length of tokens
-def get_chunked_data(data, max_tokens=1000):
+def get_chunked_data(data, max_tokens=666):  # ~ 500 words
     chunks = []
     ideal_size = int(max_tokens // (4 / 3))  # 1 token ~ 3/4 of a word
 
@@ -67,7 +67,7 @@ def get_chunked_data(data, max_tokens=1000):
 
                 start += ideal_size
                 end += ideal_size
-    print(f"-Chunked data successfully! (max tokens: {max_tokens})")
+    print(f"-Chunked data content to {chunks.__len__()} chunks! (max: {max_tokens} tokens/chunk)")
     return pd.DataFrame(chunks, columns=['Title', 'Summary', 'Content', 'URL', 'Contributor'])
 
 
@@ -84,16 +84,20 @@ def combine_values(row):
         value = row[col]
         if not pd.isna(value):
             combined_parts.append(f'{col}: {value}')
-    return '; '.join(combined_parts)
+    return '\n'.join(combined_parts)
 
 
 # TODO: process data and save to file
 def process_data(data, to_file):
+    # combined content with title, summary, url, and contributor
     data['Combined'] = data.apply(combine_values, axis=1)
-    print("--Combined data successfully!")
+    print("--Combined minor details to data content! (title, summary, url, contributor)")  # tokens varies under 1000
+
     data['Embedding'] = data.Combined.apply(lambda text: get_embedding(text))
+    print("---Got embeddings of data from OPENAI client!")
+
     data.to_csv(to_file, index=False, encoding="utf-8")
-    print("---Saved embeddings to " + to_file)
+    print(f"----Saved embeddings to {to_file}!")
 
 # data = collect_data('../documents/test.csv')
 # process_data(data, '../documents/embedded_test.csv')
