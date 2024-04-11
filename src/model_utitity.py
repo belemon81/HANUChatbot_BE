@@ -4,33 +4,9 @@ from src.test import client
 
 # def get_cosine_similarity(embedding1, embedding2):
 #     return np.dot(embedding1, embedding2) / (np.linalg.norm(embedding1) * np.linalg.norm(embedding2))
-#
-
-# def search_from_fresh_data(query_embedding, n=10):
-#     new_data = pd.read_csv('../documents/new_embedded_test.csv')
-#     similarities = []
-#     for index, row in new_data.iterrows():
-#         row_embedding = np.array(eval(row['Embedding']))
-#         similarity = get_cosine_similarity(row_embedding, query_embedding)
-#         similarities.append(similarity)
-#     indexes = [index for index, _ in sorted(enumerate(similarities), key=lambda x: x[1], reverse=True)][:n]
-#     result = []
-#     for index in indexes:
-#         result.append(new_data.Combined[index])
-#     return result
-
-# cache = []
-#
-#
-# # TODO: cache utility
-# def save_to_cache(answer):
-#     global cache
-#     if len(cache) == 2:
-#         cache.pop(0)
-#     cache.append(answer)
 
 
-# Get top most similar documents from the database
+# TODO: Get top most similar documents from the database
 def vector_search(query_embedding, conn, table_name):
     with conn.cursor() as cur:
         cur.execute(f'''  
@@ -42,13 +18,14 @@ def vector_search(query_embedding, conn, table_name):
             SELECT * FROM temp 
             WHERE sim > 0.5
             ORDER BY sim DESC 
-            LIMIT 5;
+            LIMIT 20;
         ''', (query_embedding,))
-        top_docs = [row[0] for row in cur.fetchall()]
+        top_docs = [(row[0], row[1]) for row in cur.fetchall()]
     return top_docs
 
 
-def get_completion_from_message(messages, model='gpt-3.5-turbo', temperature=0, max_tokens=1000):
+# TODO: fetch response from OPENAI client
+def get_completion_from_message(messages, model='gpt-4-turbo-2024-04-09', temperature=0, max_tokens=1000):
     response = client.chat.completions.create(
         model=model,
         messages=messages,
@@ -59,38 +36,41 @@ def get_completion_from_message(messages, model='gpt-3.5-turbo', temperature=0, 
 
 
 def get_answer(question, context, conn, table_name):
-    # global cache
     query_embedding = get_embedding(question)
     relevant_docs = vector_search(query_embedding, conn, table_name)
 
     delimiter = '```'
-    user_message = {'role': 'user', 'content': f'{delimiter}{question}{delimiter}'}
+    user_message = f'{delimiter}{question}{delimiter}'
 
     if relevant_docs:
-        system_message_content = (
+        system_message = (
             f'''
                 You are a friendly chatbot. \
                 You must refer to **Context** first, then **HANU documents**, to answer the questions. \
                 You respond in a concise, technically credible tone. \
+                You use the language of the question given to respond. \
+                You automatically make currency exchange based on the language asked, if not provided specific currency.
             ''' if context else
             f'''
                 You are a friendly chatbot. \
                 You must refer to **HANU documents** to answer the questions. \
                 You respond in a concise, technically credible tone. \
+                You use the language of the question given to respond. \
+                You automatically make currency exchange based on the language asked, if not provided specific currency.
             ''')
-        context_content = f'Context: {context}' if context else ''
-        assistant_message = {'role': 'assistant', 'content': f'{context_content}\nHANU documents: {relevant_docs}'}
+        context_content = f'Context: {context}; ' if context else ''
+        assistant = {'role': 'assistant', 'content': f'{context_content}\nHANU documents: {relevant_docs}'}
     else:
-        system_message_content = f'''
+        system_message = f'''
                             You are a friendly chatbot. \
                             You respond in a concise, technically credible tone. \
                         '''
-        assistant_message = None
+        assistant = None
 
     messages = [
-        {'role': 'system', 'content': system_message_content},
-        user_message,
-        assistant_message,
+        {'role': 'system', 'content': system_message},
+        {'role': 'user', 'content': user_message},
+        assistant,
     ]
 
     messages = [message for message in messages if message is not None]

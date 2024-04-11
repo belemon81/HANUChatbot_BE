@@ -1,12 +1,12 @@
 import pandas as pd
 import tiktoken
 
-from src.test import client
+from src.opanai_client import client
 
 
 # Calculate cost of embedding num_tokens: https://openai.com/pricing
 # def get_embedding_cost(num_tokens):
-#     return num_tokens / 1000 * 0.0005
+#     return num_tokens / 1000000 * 0.5 # gpt-3.5-turbo
 
 
 # Calculate total cost of embedding all content in the dataframe
@@ -67,6 +67,7 @@ def get_chunked_data(data, max_tokens=1000):
 
                 start += ideal_size
                 end += ideal_size
+    print(f"-Chunked data successfully! (max tokens: {max_tokens})")
     return pd.DataFrame(chunks, columns=['Title', 'Summary', 'Content', 'URL', 'Contributor'])
 
 
@@ -76,7 +77,7 @@ def get_embedding(text, model='text-embedding-3-small'):
     return client.embeddings.create(input=[text], model=model, encoding_format='float').data[0].embedding[:256]
 
 
-# TODO: combine values from multiple columns in data to one content
+# TODO: combine values from multiple columns in data to one columns
 def combine_values(row):
     combined_parts = []
     for col in row.index:
@@ -86,11 +87,13 @@ def combine_values(row):
     return '; '.join(combined_parts)
 
 
-# TODO: process data
+# TODO: process data and save to file
 def process_data(data, to_file):
     data['Combined'] = data.apply(combine_values, axis=1)
-    data['Embedding'] = data.Content.apply(lambda text: get_embedding(text))
-    data.to_csv(to_file, index=False)
+    print("--Combined data successfully!")
+    data['Embedding'] = data.Combined.apply(lambda text: get_embedding(text))
+    data.to_csv(to_file, index=False, encoding="utf-8")
+    print("---Saved embeddings to " + to_file)
 
 # data = collect_data('../documents/test.csv')
 # process_data(data, '../documents/embedded_test.csv')

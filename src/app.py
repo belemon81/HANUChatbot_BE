@@ -1,18 +1,18 @@
-import os
-
 import psycopg2
-from dotenv import load_dotenv, find_dotenv
 from flask import Flask, request, jsonify
-from openai import OpenAI
+from flask_cors import CORS
 
-from src.model_utitity import get_answer
+from src.data_processing import get_embedding
+from src.model_utitity import vector_search, get_answer
 
 app = Flask(__name__)
-_ = load_dotenv(find_dotenv())
-openai_api_key = os.environ['OPENAI_API_KEY']
-client = OpenAI(api_key=openai_api_key)
+cors = CORS(app, origins=['http://localhost:3000'])
 conn = psycopg2.connect(database='hanu_chatbot', user='postgres', password='postgres', host='localhost', port=23050)
-cache_data = []
+
+
+@app.route('/', methods=['GET'])
+def check_app_health():
+    return jsonify({'status': 'OK'})
 
 
 @app.route('/hanu-chatbot/educational-program', methods=['POST'])
@@ -23,26 +23,30 @@ def answer_educational_program_question():
 
     if question:
         try:
-            answer = get_answer(question, context, conn, 'embeddings')  # TODO: change name
-            # save_to_cache(answer)
+            answer = get_answer(question, context, conn, 'test')
             return jsonify({'answer': answer})
+            # query_embedding = get_embedding(question)
+            # relevant_docs = vector_search(query_embedding, conn, 'test')
+            # return jsonify({'relevant_docs': relevant_docs})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     else:
         return jsonify({'error': 'Question not provided!'}), 400
 
 
-@app.route('/hanu-chatbot/events-clubs', methods=['POST'])
+@app.route('/hanu-chatbot/public-administration', methods=['POST'])
 def answer_events_clubs_question():
     data = request.get_json()
     question = data.get('question')
-    context = data.get('context')
+    # context = data.get('context')
 
     if question:
         try:
-            answer = get_answer(question, context, conn, 'events-clubs')
-            # save_to_cache(answer)
-            return jsonify({'answer': answer})
+            # answer = get_answer(question, context, conn, 'public-administration')
+            # return jsonify({'answer': answer})
+            query_embedding = get_embedding(question)
+            relevant_docs = vector_search(query_embedding, conn, 'public-administration')
+            return jsonify({'relevant_docs': relevant_docs})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     else:

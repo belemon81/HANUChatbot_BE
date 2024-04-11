@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import psycopg2
 
@@ -6,15 +5,16 @@ from pgvector.psycopg2 import register_vector
 
 
 #  TODO: create database
-def create_database(conn):
+def create_database(conn, database_name):
     conn.autocommit = True
     with conn.cursor() as cur:
-        cur.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = 'hanu_chatbot'")
+        cur.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = %s", (database_name,))
         exists = cur.fetchone()
         if not exists:
-            cur.execute("CREATE DATABASE hanu_chatbot")
-            cur.execute("GRANT ALL PRIVILEGES ON DATABASE hanu_chatbot TO postgres")
+            cur.execute(f"CREATE DATABASE {database_name}")
+            cur.execute(f"GRANT ALL PRIVILEGES ON DATABASE {database_name} TO postgres")
     conn.autocommit = False
+    print("Database created successfully!")
 
 
 # TODO: create extension
@@ -23,10 +23,10 @@ def create_extension(conn):
         cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
     register_vector(conn)
     conn.commit()
+    print("Extension created successfully!")
 
 
 # TODO: create table
-
 def create_table(conn, table_name):
     with conn.cursor() as cur:
         cur.execute(f"""
@@ -37,19 +37,7 @@ def create_table(conn, table_name):
             );
         """)
     conn.commit()
-
-
-# TODO: load data from file to tables
-def load_data(conn, from_file, table_name):
-    # process_data('../documents/embedded_test.csv', '../documents/embedded_test.csv')
-    data = pd.read_csv(from_file)
-    data_list = [(row['Combined'], np.array(eval(row['Embedding']))) for index, row in data.iterrows()]
-    with conn.cursor() as cur:
-        cur.executemany(f"""
-            INSERT INTO {table_name} (content, embedding)
-            VALUES (%s, %s)
-            """, data_list)
-    conn.commit()
+    print(f"Table {table_name} created successfully!")
 
 
 # TODO: create index
@@ -59,17 +47,35 @@ def create_index(conn, table_name):
             CREATE INDEX ON {table_name} USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
         """)
     conn.commit()
+    print(f"Table {table_name}'s index created successfully!")
 
 
-# TODO: store data
-def store_data(from_file, table_name):
-    conn = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='localhost', port=23050)
-    create_database(conn)
-    conn = psycopg2.connect(database='hanu_chatbot', user='postgres', password='postgres', host='localhost', port=23050)
-    create_extension(conn)
+# TODO: load data from file to tables
+def load_data(conn, from_file, table_name):
+    data = pd.read_csv(from_file)
+    data_list = [(row['Combined'], row['Embedding']) for index, row in data.iterrows()]
+    with conn.cursor() as cur:
+        cur.executemany(f"""
+            INSERT INTO {table_name} (content, embedding)
+            VALUES (%s, %s)
+            """, data_list)
+    conn.commit()
+    print(f"----Embeddings from {from_file} are stored to database!")
 
-    create_table(conn, table_name)
-    create_index(conn, table_name)
-    load_data(conn, from_file, table_name)
 
-# store_data('../documents/embedded_test.csv', 'test')
+# TODO: initialize database and table
+def init_database(database_name, table_name):
+    postgres_conn = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='localhost',
+                                     port=23050)
+    create_database(postgres_conn, database_name)
+    db_conn = psycopg2.connect(database=database_name, user='postgres', password='postgres', host='localhost',
+                               port=23050)
+    create_table(db_conn, table_name)
+    create_index(db_conn, table_name)
+
+
+# TODO: store data to table in database
+def store_data(from_file, database_name, table_name):
+    db_conn = psycopg2.connect(database=database_name, user='postgres', password='postgres', host='localhost',
+                               port=23050)
+    load_data(db_conn, from_file, table_name)

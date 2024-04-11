@@ -1,15 +1,8 @@
-import os
-
-from dotenv import load_dotenv, find_dotenv
 from flask import Flask, request, jsonify
-from openai import OpenAI
+
+from src.opanai_client import client
 
 app = Flask(__name__)
-
-_ = load_dotenv(find_dotenv())
-openai_api_key = os.environ['OPEN_API_KEY']
-
-client = OpenAI(api_key=openai_api_key)
 
 
 @app.route('/', methods=['POST'])
