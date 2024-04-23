@@ -7,6 +7,7 @@ from src.model_utitity import get_answer, vector_search
 
 app = Flask(__name__)
 cors = CORS(app, origins=['http://localhost:3000'])
+conn = psycopg2.connect(database='hanu_chatbot', user='postgres', password='postgres', host='localhost', port=5432)
 
 
 @app.route('/', methods=['GET'])
@@ -18,13 +19,15 @@ def check_app_health():
 def get_educational_program_details():
     data = request.get_json()
     question = data.get('question')
-    conn = psycopg2.connect(database='hanu_chatbot', user='postgres', password='postgres', host='localhost', port=5432)
+    # context = data.get('context')
 
     if question:
         try:
             query_embedding = get_embedding(question)
             relevant_docs = vector_search(query_embedding, conn, 'educational_program')
             return jsonify({'relevant_docs': relevant_docs})
+            # answer = get_answer(question, context, conn, 'educational_program')
+            # return jsonify({'answer': answer})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     else:
@@ -35,7 +38,6 @@ def get_educational_program_details():
 def get_public_administration_details():
     data = request.get_json()
     question = data.get('question')
-    conn = psycopg2.connect(database='hanu_chatbot', user='postgres', password='postgres', host='localhost', port=5432)
     # context = data.get('context')
 
     if question:

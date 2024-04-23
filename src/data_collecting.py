@@ -18,5 +18,3 @@ def collect_data(from_file):
     data = data[['Title', 'Summary', 'Content', 'URL', 'Contributor']]
     print(f"\nCollected data from {from_file}!")
     return data
-
-# print(collect_data('../documents/test.csv'))

@@ -22,6 +22,7 @@ def init_database(database_name):
     postgres_conn = psycopg2.connect(database='postgres', user='postgres', password='postgres',
                                      host='localhost', port=5432)
     create_database(postgres_conn, database_name)
+    postgres_conn.close()
 
 
 # TODO: create extension
@@ -47,16 +48,6 @@ def create_table(conn, table_name):
     print(f"Table '{table_name}' created successfully!")
 
 
-# TODO: create index
-def create_index(conn, table_name):
-    with conn.cursor() as cur:
-        cur.execute(f"""
-            CREATE INDEX ON {table_name} USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
-        """)
-    conn.commit()
-    print(f"Index for '{table_name}' created successfully!")
-
-
 # TODO: initialize table
 def init_table(database_name, table_name):
     db_conn = psycopg2.connect(database=database_name, user='postgres', password='postgres',
@@ -64,6 +55,17 @@ def init_table(database_name, table_name):
     create_extension(db_conn)
     create_table(db_conn, table_name)
     create_index(db_conn, table_name)
+    db_conn.close()
+
+
+# TODO: create index
+def create_index(conn, table_name):
+    with conn.cursor() as cur:
+        cur.execute(f"""
+            CREATE INDEX ON {table_name} USING ivfflat (embedding vector_cosine_ops) WITH (lists = 10);
+        """)
+    conn.commit()
+    print(f"Index for '{table_name}' created successfully!")
 
 
 # TODO: load data from file to tables
@@ -84,3 +86,4 @@ def store_data(from_file, database_name, table_name):
     db_conn = psycopg2.connect(database=database_name, user='postgres', password='postgres',
                                host='localhost', port=5432)
     load_data(db_conn, from_file, table_name)
+    db_conn.close()

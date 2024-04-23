@@ -34,15 +34,11 @@ def load_corpus(database_name, chatbot_name):
         filepath, extension = os.path.splitext(csv_file)
         filename = os.path.basename(filepath)
         new_file = os.path.join('..\\documents\\embedded_data', f'{filename}_embedded{extension}')
-        process_data(chunked_data, new_file)
+        # process_data(chunked_data, new_file)
         store_data(new_file, database_name, chatbot_name)
 
 
 prepare('hanu_chatbot')
 load_corpus('hanu_chatbot', 'educational_program')
-# load_corpus('hanu_chatbot', 'public_administration')
-
-
-
-
-
+load_corpus('hanu_chatbot', 'public_administration')
+# load_corpus('hanu_chatbot', 'test')
