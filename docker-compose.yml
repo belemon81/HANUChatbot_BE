@@ -1,0 +1,50 @@
+version: '3.9'
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db-data:
+
+services:
+  app-hanu-gpt-be:
+    build: ./HANUChatbot_BE
+    # command: ["python", "src/model_training.py"] # uncomment it and run it first!!!!!!!!!!!!!!
+    command: ["python", "src/app.py"] # run it later
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    depends_on:
+      - app-db  
+    environment:
+      DB_HOST: app-db
+      OPENAI_API_KEY: sk-???
+
+  app-hanu-gpt-fe:
+    build: ./HANUChatbot_FE
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+    depends_on:
+      - app-db
+    environment:
+      DB_HOST: app-db
+      NEXT_PUBLIC_OPENAI_API_KEY: sk-???
+    
+  app-db:
+    image: ankane/pgvector
+    ports:
+      - "5432:5432"
+    restart: always
+    networks:
+      - app-network
+    environment:
+      - POSTGRES_DB=hanu_chatbot,postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
