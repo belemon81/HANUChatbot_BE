@@ -2,13 +2,21 @@ import psycopg2
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
 
 from data_processing import get_embedding
 from model_utitity import get_answer, vector_search
 
+load_dotenv()
+
 app = Flask(__name__)
-cors = CORS(app, origins=['http://localhost:3000'])
-conn = psycopg2.connect(user='postgres', password='postgres', host=os.environ.get("DB_HOST"), port=5432)
+cors = CORS(app, origins=os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(","))
+conn = psycopg2.connect(
+    user=os.environ.get("DB_USER", "postgres"),
+    password=os.environ.get("DB_PASSWORD", "postgres"),
+    host=os.environ.get("DB_HOST", "localhost"),
+    port=int(os.environ.get("DB_PORT_MAIN", "5433")),
+)
 
 
 @app.route('/', methods=['GET'])
@@ -53,6 +61,8 @@ def get_public_administration_details():
     else:
         return jsonify({'error': 'Question not provided!'}), 400
 
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)  # old: localhost
+    app.run(
+        host=os.environ.get("FLASK_HOST", "0.0.0.0"),
+        port=int(os.environ.get("FLASK_PORT", "8080")),
+    )  # old: localhost

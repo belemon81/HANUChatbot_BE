@@ -2,7 +2,12 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-const Sidebar = ({ currentPage, clearChat }) => {
+interface SidebarProps {
+    currentPage: string;
+    clearChat: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ currentPage, clearChat }) => {
     return (
         <div className="max-md:hidden bg-gray-800 w-1/5 flex flex-col justify-between items-center relative flex-shrink-0">
             <div className="flex flex-col justify-center items-center absolute top-1/2 transform -translate-y-1/2">

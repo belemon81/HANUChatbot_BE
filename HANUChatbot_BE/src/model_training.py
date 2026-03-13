@@ -5,7 +5,11 @@ from time import sleep
 from data_collecting import collect_data
 from data_processing import get_chunked_data, process_data
 from data_storing import store_data, init_database, init_table
+from dotenv import load_dotenv
 
+load_dotenv()
+
+database_name = os.environ.get("DATABASE_NAME")
 
 # TODO: prepare database and directory (for embeddings)
 def prepare(database_name):
@@ -43,7 +47,7 @@ def load_corpus(database_name, chatbot_name):
         store_data(new_file, database_name, chatbot_name)
 
 
-prepare('hanu_chatbot')
-load_corpus('hanu_chatbot', 'educational_program')
-load_corpus('hanu_chatbot', 'public_administration')
+prepare(database_name)
+load_corpus(database_name, 'educational_program')
+load_corpus(database_name, 'public_administration')
 # load_corpus('hanu_chatbot', 'test')

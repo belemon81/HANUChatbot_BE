@@ -41,7 +41,7 @@ export default function ServicesBot() {
         setInputQuestion('');
     }
 
-    const [selectedQuestion, setSelectedQuestion] = useState(null);
+    const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
 
     const clearChat = () => {
         console.log("Clearing chat...");

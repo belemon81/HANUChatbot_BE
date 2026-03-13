@@ -1,8 +1,11 @@
 import pandas as pd
 import psycopg2
 import os
+from dotenv import load_dotenv
 
 from pgvector.psycopg2 import register_vector
+
+load_dotenv()
 
 
 #  TODO: create database
@@ -20,8 +23,13 @@ def create_database(conn, database_name):
 
 # TODO: initialize database
 def init_database(database_name):
-    postgres_conn = psycopg2.connect(database='postgres', user='postgres', password='postgres',
-                                     host=os.environ.get("DB_HOST"), port=5432)
+    postgres_conn = psycopg2.connect(
+        database='postgres',
+        user=os.environ.get("DB_USER", "postgres"),
+        password=os.environ.get("DB_PASSWORD", "postgres"),
+        host=os.environ.get("DB_HOST", "localhost"),
+        port=int(os.environ.get("DB_PORT_ADMIN", "5433")),
+    )
     create_database(postgres_conn, database_name)
     postgres_conn.close()
 
@@ -51,8 +59,13 @@ def create_table(conn, table_name):
 
 # TODO: initialize table
 def init_table(database_name, table_name):
-    db_conn = psycopg2.connect(database=database_name, user='postgres', password='postgres',
-                               host=os.environ.get("DB_HOST"), port=5432)
+    db_conn = psycopg2.connect(
+        database=database_name,
+        user=os.environ.get("DB_USER", "postgres"),
+        password=os.environ.get("DB_PASSWORD", "postgres"),
+        host=os.environ.get("DB_HOST", "localhost"),
+        port=int(os.environ.get("DB_PORT_APP", "5432")),
+    )
     create_extension(db_conn)
     create_table(db_conn, table_name)
     create_index(db_conn, table_name)
@@ -84,7 +97,12 @@ def load_data(conn, from_file, table_name):
 
 # TODO: store data to table in database
 def store_data(from_file, database_name, table_name):
-    db_conn = psycopg2.connect(database=database_name, user='postgres', password='postgres',
-                               host=os.environ.get("DB_HOST"), port=5432)
+    db_conn = psycopg2.connect(
+        database=database_name,
+        user=os.environ.get("DB_USER", "postgres"),
+        password=os.environ.get("DB_PASSWORD", "postgres"),
+        host=os.environ.get("DB_HOST", "localhost"),
+        port=int(os.environ.get("DB_PORT_APP", "5432")),
+    )
     load_data(db_conn, from_file, table_name)
     db_conn.close()

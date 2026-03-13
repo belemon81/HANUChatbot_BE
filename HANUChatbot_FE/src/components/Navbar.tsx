@@ -3,7 +3,12 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-const Navbar = ({ currentPage, clearChat }) => {
+interface NavbarProps {
+    currentPage: string;
+    clearChat: () => void;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ currentPage, clearChat }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const toggleDropdown = () => {

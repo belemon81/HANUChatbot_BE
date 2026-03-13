@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import LoadingDots from "./LoadingDots";
@@ -6,7 +6,34 @@ import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 
 
-const ChatInterface = ({ clearChat, chatLog, isLoading, inputQuestion, setInputQuestion, handleSubmit, chatEnd, currentPage, FAQs, selectedQuestion, setSelectedQuestion }) => {
+interface ChatInterfaceProps {
+    clearChat: () => void;
+    chatLog: { type: "user" | "bot"; message: string }[];
+    isLoading: boolean;
+    inputQuestion: string;
+    setInputQuestion: (value: string) => void;
+    handleSubmit: (event: React.FormEvent<HTMLFormElement> | { preventDefault: () => void }, isFAQ?: boolean) => void;
+    chatEnd: React.RefObject<HTMLDivElement>;
+    currentPage: string;
+    FAQs: string[];
+    selectedQuestion: string | null;
+    setSelectedQuestion: React.Dispatch<React.SetStateAction<string | null>>;
+}
+
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({
+    clearChat,
+    chatLog,
+    isLoading,
+    inputQuestion,
+    setInputQuestion,
+    handleSubmit,
+    chatEnd,
+    currentPage,
+    FAQs,
+    selectedQuestion,
+    setSelectedQuestion,
+}) => {
 
     // const [selectedQuestion, setSelectedQuestion] = useState(null);
 
@@ -34,7 +61,7 @@ const ChatInterface = ({ clearChat, chatLog, isLoading, inputQuestion, setInputQ
                 
                 <div className="flex-grow p-6 overflow-auto">
                     <div className="flex flex-col space-y-4">
-                        {chatLog.map((message: any, index: any) => (
+                        {chatLog.map((message, index) => (
                             <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 {message.type === 'user' && (
                                     <div className="flex items-center">

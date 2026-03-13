@@ -13,4 +13,4 @@
         + Step 4: switch to use 2nd command
         + Step 5: add valid openai api key in docker-compose.yml
         + Step 6: run docker-compose.yml
-- HANUChatbot_BE (hanu-gpt) is cloned from my teammate's work: https://github.com/nantruong/hanu-gpt
+- HANUChatbot_FE (hanu-gpt) is cloned from my teammate's work: https://github.com/nantruong/hanu-gpt

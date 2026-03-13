@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import os
 
 from openai_client import client
 
@@ -25,6 +26,8 @@ def answer_question():
     else:
         return jsonify({'error': 'Question not provided.'}), 400
 
-
 if __name__ == '__main__':
-    app.run(host='localhost', port=8080)
+    app.run(
+        host=os.environ.get("TEST_HOST", "localhost"),
+        port=int(os.environ.get("TEST_PORT", "8080")),
+    )
